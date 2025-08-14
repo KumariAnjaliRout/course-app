@@ -30,12 +30,25 @@ app.use(
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // Allow requests with no origin
+
+      // Allow localhost (any port) + all Vercel deployments
+      if (origin.startsWith("http://localhost:") || origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      console.warn(` CORS blocked request from origin: ${origin}`);
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+
+
 // Last middleware to catch errors
 app.use((err, req, res, next) => {
   console.error("Global Error Handler:", err);
